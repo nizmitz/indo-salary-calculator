@@ -16,10 +16,10 @@ jobs:
     name: Deploy to Cloudflare Pages
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
@@ -35,4 +35,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy --project-name=indo-salary-calculator --branch=master --commit-dirty=true
+          command: pages deploy .svelte-kit/cloudflare --project-name=indo-salary-calculator --branch=master --commit-dirty=true
