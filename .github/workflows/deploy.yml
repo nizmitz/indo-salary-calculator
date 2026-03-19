@@ -21,7 +21,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Using Node 22 as a stable alternative to 24
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -35,4 +35,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .svelte-kit/cloudflare --project-name=indo-salary-calculator --commit-dirty=true
+          command: pages deploy --project-name=indo-salary-calculator --branch=master --commit-dirty=true
