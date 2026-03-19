@@ -30,6 +30,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: List Build Artifacts
+        run: ls -R .svelte-kit/cloudflare
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
