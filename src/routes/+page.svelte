@@ -1,8 +1,16 @@
 <script lang="ts">
-	import { calculateTax, type PTKPStatus, type BpjsToggles } from '$lib/tax-calculator';
+	import { calculateTax, TER_TABLES, type PTKPStatus, type BpjsToggles } from '$lib/tax-calculator';
 
 	// Language state
 	let lang = $state<'id' | 'en'>('id');
+
+	let showTerModal = $state(false);
+
+	const terCategoryMapping = {
+		A: ['TK/0', 'TK/1', 'K/0'],
+		B: ['TK/2', 'TK/3', 'K/1', 'K/2'],
+		C: ['K/3']
+	};
 
 	const translations = {
 		en: {
@@ -42,7 +50,13 @@
 			yearlyProjSubtitle: 'Estimated total tax burden for the year including THR & Bonuses.',
 			totalYearlyGross: 'Total Yearly Gross Income',
 			estYearlyTax: 'Estimated Yearly PPh 21 Tax',
-			note: 'Note: Monthly tax is withheld based on TER. True final tax is reconciled in December based on the progressive yearly calculation. If you receive bonuses/THR, you might owe more tax in December.'
+			note: 'Note: Monthly tax is withheld based on TER. True final tax is reconciled in December based on the progressive yearly calculation. If you receive bonuses/THR, you might owe more tax in December.',
+			checkTer: 'Check TER Tables',
+			close: 'Close',
+			terTitle: 'TER Tax Rates (PP 58/2023)',
+			category: 'Category',
+			monthlyGross: 'Monthly Gross Income',
+			taxRate: 'Tax Rate'
 		},
 		id: {
 			title: 'Kalkulator Gaji & Pajak ID',
@@ -82,7 +96,13 @@
 			yearlyProjSubtitle: 'Estimasi total beban pajak setahun termasuk THR & Bonus.',
 			totalYearlyGross: 'Total Penghasilan Bruto Tahunan',
 			estYearlyTax: 'Estimasi PPh 21 Tahunan',
-			note: 'Catatan: Pajak bulanan dipotong berdasarkan TER. Pajak akhir yang sebenarnya diselesaikan pada bulan Desember berdasarkan perhitungan tahunan progresif. Jika Anda menerima bonus/THR, Anda mungkin membayar pajak lebih besar di bulan Desember.'
+			note: 'Catatan: Pajak bulanan dipotong berdasarkan TER. Pajak akhir yang sebenarnya diselesaikan pada bulan Desember berdasarkan perhitungan tahunan progresif. Jika Anda menerima bonus/THR, Anda mungkin membayar pajak lebih besar di bulan Desember.',
+			checkTer: 'Cek Tabel TER',
+			close: 'Tutup',
+			terTitle: 'Tarif Pajak TER (PP 58/2023)',
+			category: 'Kategori',
+			monthlyGross: 'Penghasilan Bruto Bulanan',
+			taxRate: 'Tarif Pajak'
 		}
 	};
 
@@ -178,12 +198,37 @@
 
 <svelte:head>
 	<title>{t.title}</title>
+	<meta name="description" content={t.subtitle} />
+	<meta property="og:title" content={t.title} />
+	<meta property="og:description" content={t.subtitle} />
+	<meta property="og:type" content="website" />
+	<meta name="twitter:card" content="summary_large_image" />
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
 	<div class="mx-auto max-w-5xl">
-		<!-- Language Switcher -->
-		<div class="mb-4 flex justify-end">
+		<!-- Language Switcher & TER Button -->
+		<div class="mb-4 flex items-center justify-between">
+			<button
+				onclick={() => (showTerModal = true)}
+				class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+			>
+				<svg
+					class="mr-2 h-4 w-4 text-gray-500"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+					/>
+				</svg>
+				{t.checkTer}
+			</button>
+
 			<div class="inline-flex rounded-md shadow-sm">
 				<button
 					onclick={() => (lang = 'id')}
@@ -207,6 +252,30 @@
 		</div>
 
 		<div class="mb-10 text-center">
+			<div class="mb-4 flex justify-center">
+				<div
+					class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-10 w-10"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<rect x="2" y="4" width="20" height="16" rx="2" />
+						<line x1="2" y1="10" x2="22" y2="10" />
+						<line x1="7" y1="15" x2="7.01" y2="15" />
+						<line x1="12" y1="15" x2="12.01" y2="15" />
+						<circle cx="17" cy="15" r="1" />
+						<path d="M12 2v2" />
+						<path d="M12 20v2" />
+					</svg>
+				</div>
+			</div>
 			<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
 				{t.title}
 			</h1>
@@ -633,3 +702,101 @@
 		</footer>
 	</div>
 </div>
+
+{#if showTerModal}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-900/50 p-4 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+	>
+		<div class="w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
+			<div class="flex items-center justify-between border-b border-gray-100 p-6">
+				<h3 class="text-xl font-bold text-gray-900">{t.terTitle}</h3>
+				<button
+					onclick={() => (showTerModal = false)}
+					class="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+				>
+					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
+				</button>
+			</div>
+
+			<div
+				class="grid max-h-[70vh] grid-cols-1 gap-6 overflow-y-auto bg-gray-50/30 p-6 md:grid-cols-3"
+			>
+				{#each ['A', 'B', 'C'] as cat (cat)}
+					<div class="flex flex-col space-y-3">
+						<div class="sticky top-0 z-10 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+							<h4
+								class="flex items-center text-sm font-bold tracking-wider text-blue-600 uppercase"
+							>
+								<span
+									class="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs"
+									>{cat}</span
+								>
+								{t.category}
+								{cat}
+							</h4>
+							<p class="mt-2 text-[10px] font-medium text-gray-400">
+								PTKP: {terCategoryMapping[cat as keyof typeof terCategoryMapping].join(', ')}
+							</p>
+						</div>
+
+						<div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+							<table class="min-w-full divide-y divide-gray-100">
+								<thead class="bg-gray-50">
+									<tr>
+										<th
+											class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase"
+											>{t.monthlyGross}</th
+										>
+										<th
+											class="px-3 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase"
+											>{t.taxRate}</th
+										>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-gray-50">
+									{#each TER_TABLES[cat as keyof typeof TER_TABLES] as row, i (row.limit)}
+										<tr class="transition-colors hover:bg-blue-50/30">
+											<td class="px-3 py-2 text-[10px] whitespace-nowrap text-gray-600">
+												{#if i === 0}
+													≤ {formatIDR(row.limit)}
+												{:else if row.limit === Infinity}
+													> {formatIDR(TER_TABLES[cat as keyof typeof TER_TABLES][i - 1].limit)}
+												{:else}
+													{formatIDR(TER_TABLES[cat as keyof typeof TER_TABLES][i - 1].limit + 1)} - {formatIDR(
+														row.limit
+													)}
+												{/if}
+											</td>
+											<td
+												class="px-3 py-2 text-right text-xs font-bold whitespace-nowrap text-gray-900"
+												>{row.rate}%</td
+											>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<div class="flex justify-end rounded-b-2xl border-t border-gray-100 bg-gray-50/50 p-6">
+				<button
+					onclick={() => (showTerModal = false)}
+					class="rounded-lg bg-gray-900 px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:outline-none"
+				>
+					{t.close}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

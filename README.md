@@ -41,7 +41,7 @@ This project follows professional DevOps practices:
 
 ### Prerequisites
 
-- Node.js (v22 or later recommended)
+- Node.js (v24 or later recommended)
 - npm
 
 ### Installation

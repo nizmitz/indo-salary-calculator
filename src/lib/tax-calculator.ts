@@ -58,10 +58,8 @@ export const TER_CATEGORY_MAP: Record<PTKPStatus, 'A' | 'B' | 'C'> = {
 	'K/3': 'C'
 };
 
-// Simplified TER Tables (Gross Income Thresholds up to Max) -> Rate (%)
-// In a full production app, this would contain all 40+ exact rows per category.
-// Using a functional approximation/subset for brevity in this technical test.
-const TER_TABLES = {
+// TER Tables (Gross Income Thresholds up to Max) -> Rate (%)
+export const TER_TABLES = {
 	A: [
 		{ limit: 5_400_000, rate: 0 },
 		{ limit: 5_650_000, rate: 0.25 },
