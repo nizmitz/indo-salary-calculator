@@ -4,9 +4,6 @@ on:
   push:
     branches: [master]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,12 +13,12 @@ jobs:
     name: Deploy to Cloudflare Pages
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -30,12 +27,10 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: List Build Artifacts
-        run: ls -R .svelte-kit/cloudflare
-
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy .svelte-kit/cloudflare --project-name=indo-salary-calculator --branch=master --commit-dirty=true
+          wranglerVersion: 'latest'
