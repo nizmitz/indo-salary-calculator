@@ -10,7 +10,7 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "prettier --check . && eslint .",
+		"lint": "prettier --check . && eslint . && yamllint .github/workflows/*.yml",
 		"format": "prettier --write .",
 		"gen": "wrangler types",
 		"test": "vitest run",
@@ -21,8 +21,11 @@
 			"eslint --fix",
 			"prettier --write"
 		],
-		"*.{json,md,css}": [
+		"*.{json,md,css,yml,yaml}": [
 			"prettier --write"
+		],
+		"*.{yml,yaml}": [
+			"yamllint"
 		]
 	},
 	"devDependencies": {
@@ -51,6 +54,7 @@
 		"typescript-eslint": "^8.54.0",
 		"vite": "^8.0.1",
 		"vitest": "^4.1.0",
-		"wrangler": "^4.63.0"
+		"wrangler": "^4.63.0",
+		"yaml-lint": "^1.7.0"
 	}
 }
