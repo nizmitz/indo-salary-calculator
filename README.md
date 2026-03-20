@@ -11,12 +11,21 @@ Live Site: [salary.nizmitz.com](https://salary.nizmitz.com)
 - **BPJS Integration**:
   - **BPJS Ketenagakerjaan**: Includes JHT (Jaminan Hari Tua) and JP (Jaminan Pensiun) with current caps.
   - **BPJS Kesehatan**: Comprehensive health insurance calculation for both employer and employee.
-- **Irregular Income**: Seamlessly include **THR** and **Bonus** in your calculations. The engine automatically adjusts the TER rate for that specific high-income month.
+- **Shareable Links**: Copy a compact share link (`#c=...`) that encodes your exact inputs. Send it to anyone to recreate your calculation instantly! (Note: Clean URLs are kept for default settings).
 - **Localization**: Full support for **Indonesia** and **English** languages.
 - **User Experience**:
   - **Interactive Formatting**: IDR amounts are automatically formatted with thousands separators as you type.
   - **Responsive Design**: Clean, modern interface built with Tailwind CSS 4.
+  - **One-Click Share**: Built-in share button with clipboard integration and visual feedback.
 - **Security & Privacy**: 100% client-side calculation. Your financial data never leaves your browser.
+
+## 🔗 Shareable Links
+
+This application features a built-in URL state system. As you adjust your salary, tax relief status, or BPJS toggles, the URL in your browser's address bar automatically updates with a compact, base64url-encoded hash fragment (e.g., `#c=...`).
+
+- **To Share**: Simply click the **"Share"** button in the summary card or copy the URL from your browser.
+- **Clean URLs**: If your settings match the defaults (e.g., Rp 10.000.000 salary with default PTKP and BPJS), the URL remains clean without a hash fragment.
+- **Persistence**: When someone opens a shared link, the application automatically hydrates the form with the shared values.
 
 ## 🛠 Tech Stack
 
@@ -62,7 +71,7 @@ npm install
 
 ## 🛡 Security Policy
 
-For detailed information on supported versions and how to report vulnerabilities, please see our [SECURITY.md](./SECURITY.md).
+For detailed information on supported versions and how to report vulnerabilities, please see our [Security Policy](https://salary.nizmitz.com/security-policy) or the [SECURITY.md](./SECURITY.md) file.
 
 ## 📄 License
 
