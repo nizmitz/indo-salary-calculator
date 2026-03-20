@@ -1,10 +1,14 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { calculateTax, TER_TABLES, type PTKPStatus, type BpjsToggles } from '$lib/tax-calculator';
+	import { hasStateInHash, fromHashFragment, toHashFragment } from '$lib/url-state';
 
 	// Language state
 	let lang = $state<'id' | 'en'>('id');
 
 	let showTerModal = $state(false);
+	let showShareToast = $state(false);
+	let isHydrated = $state(false);
 
 	const terCategoryMapping = {
 		A: ['TK/0', 'TK/1', 'K/0'],
@@ -56,7 +60,9 @@
 			terTitle: 'TER Tax Rates (PP 58/2023)',
 			category: 'Category',
 			monthlyGross: 'Monthly Gross Income',
-			taxRate: 'Tax Rate'
+			taxRate: 'Tax Rate',
+			share: 'Share',
+			copied: 'Link copied!'
 		},
 		id: {
 			title: 'Kalkulator Gaji & Pajak ID',
@@ -102,7 +108,9 @@
 			terTitle: 'Tarif Pajak TER (PP 58/2023)',
 			category: 'Kategori',
 			monthlyGross: 'Penghasilan Bruto Bulanan',
-			taxRate: 'Tarif Pajak'
+			taxRate: 'Tarif Pajak',
+			share: 'Bagikan',
+			copied: 'Link disalin!'
 		}
 	};
 
@@ -193,6 +201,64 @@
 		}
 
 		target.setSelectionRange(newPos, newPos);
+	}
+
+	// Hydrate from URL hash on mount
+	onMount(() => {
+		const hash = window.location.hash;
+		if (hasStateInHash(hash)) {
+			const state = fromHashFragment(hash);
+			baseSalary = state.baseSalary;
+			allowances = state.allowances;
+			companyPaidInsurance = state.companyPaidInsurance;
+			includeThr = state.includeThr;
+			thrAmount = state.thrAmount;
+			includeBonus = state.includeBonus;
+			bonusAmount = state.bonusAmount;
+			ptkpStatus = state.ptkpStatus;
+			bpjsToggles = state.bpjsToggles;
+			isGrossUp = state.isGrossUp;
+			lang = state.lang;
+		}
+		isHydrated = true;
+	});
+
+	// Reactively update URL hash when state changes
+	$effect(() => {
+		if (!isHydrated) return;
+		const hash = toHashFragment({
+			baseSalary,
+			allowances,
+			companyPaidInsurance,
+			includeThr,
+			thrAmount,
+			includeBonus,
+			bonusAmount,
+			ptkpStatus,
+			bpjsToggles,
+			isGrossUp,
+			lang
+		});
+		const newUrl = hash ? `${window.location.pathname}${hash}` : window.location.pathname;
+		history.replaceState(null, '', newUrl);
+	});
+
+	async function shareLink() {
+		try {
+			await navigator.clipboard.writeText(window.location.href);
+			showShareToast = true;
+			setTimeout(() => (showShareToast = false), 2000);
+		} catch {
+			// Fallback for older browsers
+			const input = document.createElement('input');
+			input.value = window.location.href;
+			document.body.appendChild(input);
+			input.select();
+			document.execCommand('copy');
+			document.body.removeChild(input);
+			showShareToast = true;
+			setTimeout(() => (showShareToast = false), 2000);
+		}
 	}
 </script>
 
@@ -535,7 +601,7 @@
 			<div class="space-y-6 lg:col-span-7">
 				<!-- Summary Card -->
 				<div
-					class="overflow-hidden rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-lg"
+					class="overflow-hidden rounded-lg bg-linear-to-br from-blue-600 to-blue-800 text-white shadow-lg"
 				>
 					<div class="p-6">
 						<h3 class="text-lg font-medium opacity-90">{t.estThp}</h3>
@@ -555,6 +621,29 @@
 									>{formatIDR(result.taxMonthly)}</span
 								>
 							</div>
+						</div>
+						<div class="mt-4 flex items-center justify-between border-t border-blue-500 pt-4">
+							<button
+								onclick={shareLink}
+								class="inline-flex items-center rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/30 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-blue-600 focus:outline-none"
+							>
+								<svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+									/>
+								</svg>
+								{t.share}
+							</button>
+							{#if showShareToast}
+								<span
+									class="animate-fade-in rounded-full bg-green-400/20 px-3 py-1 text-xs font-medium text-green-100"
+								>
+									✓ {t.copied}
+								</span>
+							{/if}
 						</div>
 					</div>
 				</div>
@@ -714,6 +803,7 @@
 				<h3 class="text-xl font-bold text-gray-900">{t.terTitle}</h3>
 				<button
 					onclick={() => (showTerModal = false)}
+					aria-label="Close"
 					class="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
 				>
 					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

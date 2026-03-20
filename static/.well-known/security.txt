@@ -2,4 +2,4 @@ Contact: https://nizmitz.com/contact
 Expires: 2027-03-19T00:00:00.000Z
 Preferred-Languages: en, id
 Canonical: https://salary.nizmitz.com/.well-known/security.txt
-Policy: https://salary.nizmitz.com/SECURITY.md
+Policy: https://salary.nizmitz.com/security-policy
