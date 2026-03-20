@@ -3,6 +3,8 @@
 	import { calculateTax, TER_TABLES, type PTKPStatus, type BpjsToggles } from '$lib/tax-calculator';
 	import { hasStateInHash, fromHashFragment, toHashFragment } from '$lib/url-state';
 
+	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
+
 	// Language state
 	let lang = $state<'id' | 'en'>('id');
 
@@ -765,7 +767,15 @@
 					>nizmitz.com</a
 				>. All rights reserved.
 			</p>
-			<div class="mt-4 flex justify-center space-x-6">
+			<div class="mt-6 flex justify-center">
+				<div
+					class="cf-turnstile"
+					data-sitekey={PUBLIC_TURNSTILE_SITE_KEY}
+					data-theme="light"
+					data-size="normal"
+				></div>
+			</div>
+			<div class="mt-6 flex justify-center space-x-6">
 				<a href="https://github.com/nizmitz" class="text-gray-400 hover:text-gray-500">
 					<span class="sr-only">GitHub</span>
 					<svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
