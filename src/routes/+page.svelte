@@ -1,12 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { calculateTax, TER_TABLES, type PTKPStatus, type BpjsToggles } from '$lib/tax-calculator';
+	import {
+		calculateTax,
+		TER_TABLES,
+		BPJS,
+		formatRatePercent,
+		type PTKPStatus,
+		type BpjsToggles
+	} from '$lib/tax-calculator';
 	import { hasStateInHash, fromHashFragment, toHashFragment } from '$lib/url-state';
+	import { translations, type Lang } from '$lib/i18n';
 
 	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
 
 	// Language state
-	let lang = $state<'id' | 'en'>('id');
+	let lang = $state<Lang>('id');
 
 	let showTerModal = $state(false);
 	let showShareToast = $state(false);
@@ -16,104 +24,6 @@
 		A: ['TK/0', 'TK/1', 'K/0'],
 		B: ['TK/2', 'TK/3', 'K/1', 'K/2'],
 		C: ['K/3']
-	};
-
-	const translations = {
-		en: {
-			title: 'Salary & Tax Calculator ID',
-			subtitle: 'Calculate your monthly & yearly tax using the latest TER rules.',
-			incomeDetails: 'Income Details',
-			baseSalary: 'Base Salary',
-			allowances: 'Fixed Allowances',
-			insurance: 'Company Paid Additional Insurance',
-			insuranceHint: 'E.g., external medical insurance. This will be added to your gross income.',
-			includeThr: 'Include THR',
-			includeBonus: 'Include Bonus',
-			taxConfig: 'Tax Settings',
-			ptkpStatus: 'Tax Relief Status (PTKP)',
-			bpjsPart: 'BPJS Contributions',
-			jht: 'Old Age Security (JHT)',
-			jp: 'Pension Security (JP)',
-			kes: 'Health Insurance (BPJS-K)',
-			calcMethod: 'Tax Calculation Method',
-			gross: 'Gross',
-			grossDesc: 'Tax is deducted from your base salary.',
-			grossUp: 'Gross-Up',
-			grossUpDesc: 'Company provides a tax allowance to cover your tax.',
-			estThp: 'Estimated Monthly Take Home Pay',
-			monGross: 'Monthly Gross Income',
-			monTax: 'Monthly Tax (PPh 21)',
-			monBreakdown: 'Monthly Breakdown',
-			grossAdditions: 'Gross Income Additions',
-			thrIncluded: 'THR (Included this month)',
-			bonusIncluded: 'Bonus (Included this month)',
-			kesCompany: 'BPJS Kesehatan (Company 4%)',
-			taxAllowance: 'Tax Allowance (Gross-up)',
-			totalMonGross: 'Total Monthly Gross',
-			deductions: 'Deductions from Take Home Pay',
-			totalDeductions: 'Total Deductions',
-			yearlyProj: 'Yearly Projection',
-			yearlyProjSubtitle: 'Estimated total tax burden for the year including THR & Bonuses.',
-			totalYearlyGross: 'Total Yearly Gross Income',
-			estYearlyTax: 'Estimated Yearly PPh 21 Tax',
-			note: 'Note: Monthly tax is withheld based on TER. True final tax is reconciled in December based on the progressive yearly calculation. If you receive bonuses/THR, you might owe more tax in December.',
-			checkTer: 'Check TER Tables',
-			close: 'Close',
-			terTitle: 'TER Tax Rates (PP 58/2023)',
-			category: 'Category',
-			monthlyGross: 'Monthly Gross Income',
-			taxRate: 'Tax Rate',
-			share: 'Share',
-			copied: 'Link copied!'
-		},
-		id: {
-			title: 'Kalkulator Gaji & Pajak ID',
-			subtitle: 'Hitung pajak bulanan & tahunan Anda menggunakan aturan TER terbaru.',
-			incomeDetails: 'Detail Penghasilan',
-			baseSalary: 'Gaji Pokok',
-			allowances: 'Tunjangan Tetap',
-			insurance: 'Asuransi Tambahan Dibayar Perusahaan',
-			insuranceHint:
-				'Misal, asuransi kesehatan eksternal. Nilai ini akan menambah penghasilan bruto Anda.',
-			includeThr: 'Sertakan THR',
-			includeBonus: 'Sertakan Bonus',
-			taxConfig: 'Pengaturan Pajak',
-			ptkpStatus: 'Status PTKP',
-			bpjsPart: 'Kontribusi BPJS',
-			jht: 'Jaminan Hari Tua (JHT)',
-			jp: 'Jaminan Pensiun (JP)',
-			kes: 'BPJS Kesehatan',
-			calcMethod: 'Metode Perhitungan Pajak',
-			gross: 'Gross',
-			grossDesc: 'Pajak dipotong langsung dari gaji pokok Anda.',
-			grossUp: 'Gross-Up',
-			grossUpDesc: 'Perusahaan memberikan tunjangan pajak untuk menanggung pajak Anda.',
-			estThp: 'Estimasi Take Home Pay Bulanan',
-			monGross: 'Penghasilan Bruto Bulanan',
-			monTax: 'Pajak Bulanan (PPh 21)',
-			monBreakdown: 'Rincian Bulanan',
-			grossAdditions: 'Tambahan Penghasilan Bruto',
-			thrIncluded: 'THR (Termasuk bulan ini)',
-			bonusIncluded: 'Bonus (Termasuk bulan ini)',
-			kesCompany: 'BPJS Kesehatan (Perusahaan 4%)',
-			taxAllowance: 'Tunjangan Pajak (Gross-up)',
-			totalMonGross: 'Total Bruto Bulanan',
-			deductions: 'Potongan dari Take Home Pay',
-			totalDeductions: 'Total Potongan',
-			yearlyProj: 'Proyeksi Tahunan',
-			yearlyProjSubtitle: 'Estimasi total beban pajak setahun termasuk THR & Bonus.',
-			totalYearlyGross: 'Total Penghasilan Bruto Tahunan',
-			estYearlyTax: 'Estimasi PPh 21 Tahunan',
-			note: 'Catatan: Pajak bulanan dipotong berdasarkan TER. Pajak akhir yang sebenarnya diselesaikan pada bulan Desember berdasarkan perhitungan tahunan progresif. Jika Anda menerima bonus/THR, Anda mungkin membayar pajak lebih besar di bulan Desember.',
-			checkTer: 'Cek Tabel TER',
-			close: 'Tutup',
-			terTitle: 'Tarif Pajak TER (PP 58/2023)',
-			category: 'Kategori',
-			monthlyGross: 'Penghasilan Bruto Bulanan',
-			taxRate: 'Tarif Pajak',
-			share: 'Bagikan',
-			copied: 'Link disalin!'
-		}
 	};
 
 	let t = $derived(translations[lang]);
@@ -688,7 +598,7 @@
 											<span>{formatIDR(income.bonus)}</span>
 										</div>{/if}
 									{#if result.bpjs.kesehatanCompany > 0}<div class="flex justify-between">
-											<span>{t.kesCompany}</span>
+											<span>{t.kesCompany} ({formatRatePercent(BPJS.kesehatan.companyRate)})</span>
 											<span>{formatIDR(result.bpjs.kesehatanCompany)}</span>
 										</div>{/if}
 									{#if isGrossUp}<div class="flex justify-between font-medium text-blue-600">
@@ -709,15 +619,15 @@
 								<dt class="text-sm font-medium text-gray-500">{t.deductions}</dt>
 								<dd class="mt-1 space-y-2 text-sm text-gray-900">
 									{#if result.bpjs.jhtEmployee > 0}<div class="flex justify-between">
-											<span>{t.jht} (2%)</span>
+											<span>{t.jht} ({formatRatePercent(BPJS.jht.employeeRate)})</span>
 											<span>-{formatIDR(result.bpjs.jhtEmployee)}</span>
 										</div>{/if}
 									{#if result.bpjs.jpEmployee > 0}<div class="flex justify-between">
-											<span>{t.jp} (1%)</span>
+											<span>{t.jp} ({formatRatePercent(BPJS.jp.employeeRate)})</span>
 											<span>-{formatIDR(result.bpjs.jpEmployee)}</span>
 										</div>{/if}
 									{#if result.bpjs.kesehatanEmployee > 0}<div class="flex justify-between">
-											<span>{t.kes} (1%)</span>
+											<span>{t.kes} ({formatRatePercent(BPJS.kesehatan.employeeRate)})</span>
 											<span>-{formatIDR(result.bpjs.kesehatanEmployee)}</span>
 										</div>{/if}
 									<div class="flex justify-between font-medium text-red-600">
