@@ -802,14 +802,29 @@
 	</div>
 </div>
 
+<svelte:window
+	onkeydown={(e) => {
+		if (showTerModal && e.key === 'Escape') showTerModal = false;
+	}}
+/>
+
 {#if showTerModal}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-900/50 p-4 backdrop-blur-sm"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
+		onclick={(e) => {
+			if (e.target === e.currentTarget) showTerModal = false;
+		}}
+		onkeydown={(e) => {
+			if (e.target === e.currentTarget && e.key === 'Escape') showTerModal = false;
+		}}
 	>
-		<div class="w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
-			<div class="flex items-center justify-between border-b border-gray-100 p-6">
+		<div
+			class="flex max-h-[calc(100dvh-2rem)] w-full max-w-4xl flex-col rounded-2xl bg-white shadow-2xl"
+		>
+			<div class="flex shrink-0 items-center justify-between border-b border-gray-100 p-6">
 				<h3 class="text-xl font-bold text-gray-900">{t.terTitle}</h3>
 				<button
 					onclick={() => (showTerModal = false)}
@@ -828,11 +843,11 @@
 			</div>
 
 			<div
-				class="grid max-h-[70vh] grid-cols-1 gap-6 overflow-y-auto bg-gray-50/30 p-6 md:grid-cols-3"
+				class="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto bg-gray-50/30 p-6 md:grid-cols-3 md:overflow-hidden"
 			>
 				{#each ['A', 'B', 'C'] as cat (cat)}
-					<div class="flex flex-col space-y-3">
-						<div class="sticky top-0 z-10 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+					<div class="space-y-3 md:flex md:min-h-0 md:flex-col">
+						<div class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
 							<h4
 								class="flex items-center text-sm font-bold tracking-wider text-blue-600 uppercase"
 							>
@@ -848,9 +863,11 @@
 							</p>
 						</div>
 
-						<div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+						<div
+							class="h-[45vh] min-h-0 overflow-x-auto overflow-y-auto rounded-xl border border-gray-100 bg-white shadow-sm md:h-auto md:max-h-none md:flex-1"
+						>
 							<table class="min-w-full divide-y divide-gray-100">
-								<thead class="bg-gray-50">
+								<thead class="sticky top-0 z-10 bg-gray-50">
 									<tr>
 										<th
 											class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase"
@@ -889,7 +906,9 @@
 				{/each}
 			</div>
 
-			<div class="flex justify-end rounded-b-2xl border-t border-gray-100 bg-gray-50/50 p-6">
+			<div
+				class="flex shrink-0 justify-end rounded-b-2xl border-t border-gray-100 bg-gray-50/50 p-6"
+			>
 				<button
 					onclick={() => (showTerModal = false)}
 					class="rounded-lg bg-gray-900 px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:outline-none"
