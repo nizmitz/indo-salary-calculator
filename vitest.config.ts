@@ -4,8 +4,12 @@ import path from 'path';
 
 export default defineConfig({
 	plugins: [svelte({ hot: !process.env.VITEST })],
+	resolve: {
+		conditions: ['browser']
+	},
 	test: {
 		environment: 'jsdom',
+		setupFiles: ['./vitest-setup.ts'],
 		alias: {
 			$lib: path.resolve(__dirname, './src/lib')
 		}

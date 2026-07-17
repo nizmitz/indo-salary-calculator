@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import {
 		calculateTax,
-		TER_TABLES,
 		BPJS,
 		formatRatePercent,
 		type PTKPStatus,
@@ -10,6 +9,9 @@
 	} from '$lib/tax-calculator';
 	import { hasStateInHash, fromHashFragment, toHashFragment } from '$lib/url-state';
 	import { translations, type Lang } from '$lib/i18n';
+	import { formatIDR } from '$lib/format';
+	import CurrencyInput from '$lib/components/CurrencyInput.svelte';
+	import TerModal from '$lib/components/TerModal.svelte';
 
 	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
 
@@ -19,12 +21,6 @@
 	let showTerModal = $state(false);
 	let showShareToast = $state(false);
 	let isHydrated = $state(false);
-
-	const terCategoryMapping = {
-		A: ['TK/0', 'TK/1', 'K/0'],
-		B: ['TK/2', 'TK/3', 'K/1', 'K/2'],
-		C: ['K/3']
-	};
 
 	let t = $derived(translations[lang]);
 
@@ -60,60 +56,6 @@
 	});
 
 	let result = $derived(calculateTax(income, ptkpStatus, bpjsToggles, isGrossUp));
-
-	// Formatter for display
-	const formatIDR = (value: number) => {
-		return new Intl.NumberFormat('id-ID', {
-			style: 'currency',
-			currency: 'IDR',
-			minimumFractionDigits: 0
-		}).format(Math.round(value));
-	};
-
-	// Formatter for input field (thousands separator only)
-	const formatInput = (value: number) => {
-		if (value === 0) return '0';
-		return new Intl.NumberFormat('id-ID').format(value);
-	};
-
-	// Parser for input field (strips non-digits)
-	const parseInput = (value: string) => {
-		const digits = value.replace(/\D/g, '');
-		if (!digits) return 0;
-		return parseInt(digits, 10);
-	};
-
-	function handleInput(e: Event, setter: (val: number) => void) {
-		const target = e.target as HTMLInputElement;
-		const rawValue = target.value;
-		const cursorPosition = target.selectionStart || 0;
-
-		// 1. Calculate how many digits were before the cursor in the old value
-		const beforeCursor = rawValue.slice(0, cursorPosition);
-		const digitsBefore = beforeCursor.replace(/\D/g, '').length;
-
-		// 2. Parse the new numeric value
-		const parsed = parseInput(rawValue);
-		setter(parsed);
-
-		// 3. Format the value for display
-		const formatted = formatInput(parsed);
-
-		// 4. Update the input field value
-		target.value = formatted;
-
-		// 5. Restore cursor position based on digit count
-		let newPos = 0;
-		let digitsFound = 0;
-		while (digitsFound < digitsBefore && newPos < formatted.length) {
-			if (/\d/.test(formatted[newPos])) {
-				digitsFound++;
-			}
-			newPos++;
-		}
-
-		target.setSelectionRange(newPos, newPos);
-	}
 
 	// Hydrate from URL hash on mount
 	onMount(() => {
@@ -273,57 +215,21 @@
 							<label class="block text-sm font-medium text-gray-700" for="base-salary"
 								>{t.baseSalary}</label
 							>
-							<div class="relative mt-1 rounded-md shadow-sm">
-								<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-									<span class="text-gray-500 sm:text-sm">Rp</span>
-								</div>
-								<input
-									id="base-salary"
-									type="text"
-									value={formatInput(baseSalary)}
-									oninput={(e) => handleInput(e, (v) => (baseSalary = v))}
-									class="block w-full rounded-md border border-gray-300 py-2 pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-									placeholder="0"
-								/>
-							</div>
+							<CurrencyInput id="base-salary" bind:value={baseSalary} />
 						</div>
 
 						<div>
 							<label class="block text-sm font-medium text-gray-700" for="allowances"
 								>{t.allowances}</label
 							>
-							<div class="relative mt-1 rounded-md shadow-sm">
-								<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-									<span class="text-gray-500 sm:text-sm">Rp</span>
-								</div>
-								<input
-									id="allowances"
-									type="text"
-									value={formatInput(allowances)}
-									oninput={(e) => handleInput(e, (v) => (allowances = v))}
-									class="block w-full rounded-md border border-gray-300 py-2 pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-									placeholder="0"
-								/>
-							</div>
+							<CurrencyInput id="allowances" bind:value={allowances} />
 						</div>
 
 						<div>
 							<label class="block text-sm font-medium text-gray-700" for="insurance"
 								>{t.insurance}</label
 							>
-							<div class="relative mt-1 rounded-md shadow-sm">
-								<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-									<span class="text-gray-500 sm:text-sm">Rp</span>
-								</div>
-								<input
-									id="insurance"
-									type="text"
-									value={formatInput(companyPaidInsurance)}
-									oninput={(e) => handleInput(e, (v) => (companyPaidInsurance = v))}
-									class="block w-full rounded-md border border-gray-300 py-2 pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-									placeholder="0"
-								/>
-							</div>
+							<CurrencyInput id="insurance" bind:value={companyPaidInsurance} />
 							<p class="mt-1 text-xs text-gray-500 italic">
 								{t.insuranceHint}
 							</p>
@@ -343,18 +249,7 @@
 							>
 						</div>
 						{#if includeThr}
-							<div class="relative mt-2 rounded-md shadow-sm">
-								<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-									<span class="text-gray-500 sm:text-sm">Rp</span>
-								</div>
-								<input
-									type="text"
-									value={formatInput(thrAmount)}
-									oninput={(e) => handleInput(e, (v) => (thrAmount = v))}
-									class="block w-full rounded-md border border-gray-300 py-2 pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-									placeholder="0"
-								/>
-							</div>
+							<CurrencyInput bind:value={thrAmount} />
 						{/if}
 
 						<div class="mt-4 flex items-center">
@@ -369,18 +264,7 @@
 							>
 						</div>
 						{#if includeBonus}
-							<div class="relative mt-2 rounded-md shadow-sm">
-								<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-									<span class="text-gray-500 sm:text-sm">Rp</span>
-								</div>
-								<input
-									type="text"
-									value={formatInput(bonusAmount)}
-									oninput={(e) => handleInput(e, (v) => (bonusAmount = v))}
-									class="block w-full rounded-md border border-gray-300 py-2 pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-									placeholder="0"
-								/>
-							</div>
+							<CurrencyInput bind:value={bonusAmount} />
 						{/if}
 					</div>
 				</div>
@@ -712,120 +596,4 @@
 	</div>
 </div>
 
-<svelte:window
-	onkeydown={(e) => {
-		if (showTerModal && e.key === 'Escape') showTerModal = false;
-	}}
-/>
-
-{#if showTerModal}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={(e) => {
-			if (e.target === e.currentTarget) showTerModal = false;
-		}}
-		onkeydown={(e) => {
-			if (e.target === e.currentTarget && e.key === 'Escape') showTerModal = false;
-		}}
-	>
-		<div
-			class="flex max-h-[calc(100dvh-2rem)] w-full max-w-4xl flex-col rounded-2xl bg-white shadow-2xl"
-		>
-			<div class="flex shrink-0 items-center justify-between border-b border-gray-100 p-6">
-				<h3 class="text-xl font-bold text-gray-900">{t.terTitle}</h3>
-				<button
-					onclick={() => (showTerModal = false)}
-					aria-label="Close"
-					class="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-				>
-					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12"
-						/>
-					</svg>
-				</button>
-			</div>
-
-			<div
-				class="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto bg-gray-50/30 p-6 md:grid-cols-3 md:overflow-hidden"
-			>
-				{#each ['A', 'B', 'C'] as cat (cat)}
-					<div class="space-y-3 md:flex md:min-h-0 md:flex-col">
-						<div class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-							<h4
-								class="flex items-center text-sm font-bold tracking-wider text-blue-600 uppercase"
-							>
-								<span
-									class="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs"
-									>{cat}</span
-								>
-								{t.category}
-								{cat}
-							</h4>
-							<p class="mt-2 text-[10px] font-medium text-gray-400">
-								PTKP: {terCategoryMapping[cat as keyof typeof terCategoryMapping].join(', ')}
-							</p>
-						</div>
-
-						<div
-							class="h-[45vh] min-h-0 overflow-x-auto overflow-y-auto rounded-xl border border-gray-100 bg-white shadow-sm md:h-auto md:max-h-none md:flex-1"
-						>
-							<table class="min-w-full divide-y divide-gray-100">
-								<thead class="sticky top-0 z-10 bg-gray-50">
-									<tr>
-										<th
-											class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase"
-											>{t.monthlyGross}</th
-										>
-										<th
-											class="px-3 py-2 text-right text-[10px] font-semibold text-gray-500 uppercase"
-											>{t.taxRate}</th
-										>
-									</tr>
-								</thead>
-								<tbody class="divide-y divide-gray-50">
-									{#each TER_TABLES[cat as keyof typeof TER_TABLES] as row, i (row.limit)}
-										<tr class="transition-colors hover:bg-blue-50/30">
-											<td class="px-3 py-2 text-[10px] whitespace-nowrap text-gray-600">
-												{#if i === 0}
-													≤ {formatIDR(row.limit)}
-												{:else if row.limit === Infinity}
-													> {formatIDR(TER_TABLES[cat as keyof typeof TER_TABLES][i - 1].limit)}
-												{:else}
-													{formatIDR(TER_TABLES[cat as keyof typeof TER_TABLES][i - 1].limit + 1)} - {formatIDR(
-														row.limit
-													)}
-												{/if}
-											</td>
-											<td
-												class="px-3 py-2 text-right text-xs font-bold whitespace-nowrap text-gray-900"
-												>{row.rate}%</td
-											>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
-					</div>
-				{/each}
-			</div>
-
-			<div
-				class="flex shrink-0 justify-end rounded-b-2xl border-t border-gray-100 bg-gray-50/50 p-6"
-			>
-				<button
-					onclick={() => (showTerModal = false)}
-					class="rounded-lg bg-gray-900 px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:outline-none"
-				>
-					{t.close}
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<TerModal bind:open={showTerModal} {t} />
