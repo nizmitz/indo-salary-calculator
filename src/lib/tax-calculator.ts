@@ -240,7 +240,7 @@ export const calculateTax = (
 ): CalculationResult => {
 	// Limits
 	const BPJS_KES_CAP = 12_000_000;
-	const BPJS_JP_CAP = 10_042_300; // 2024 limit
+	const BPJS_JP_CAP = 11_086_300; // JP wage ceiling (updated per feature request)
 
 	const baseForBpjs = income.baseSalary; // Usually just base salary, sometimes base + fixed allowance. Assuming base for simplicity.
 

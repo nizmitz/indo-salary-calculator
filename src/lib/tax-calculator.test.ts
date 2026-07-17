@@ -61,3 +61,89 @@ describe('tax-calculator', () => {
 		expect(result.takeHomePayMonthly).toBeCloseTo(10_000_000 - deductionsExclTax, 0);
 	});
 });
+
+describe('BPJS contributions', () => {
+	const bpjsAllOn = { jht: true, jp: true, kesehatan: true };
+	const bpjsAllOff = { jht: false, jp: false, kesehatan: false };
+
+	it('caps JP contribution above the wage ceiling', () => {
+		const income = {
+			baseSalary: 20_000_000,
+			allowances: 0,
+			companyPaidInsurance: 0,
+			bonus: 0,
+			thr: 0
+		};
+
+		const result = calculateTax(income, 'TK/0', bpjsAllOn, false);
+
+		expect(result.bpjs.jpEmployee).toBeCloseTo(110_863, 0);
+		expect(result.bpjs.jpCompany).toBeCloseTo(221_726, 0);
+	});
+
+	it('does not cap JP contribution below the wage ceiling', () => {
+		const income = {
+			baseSalary: 8_000_000,
+			allowances: 0,
+			companyPaidInsurance: 0,
+			bonus: 0,
+			thr: 0
+		};
+
+		const result = calculateTax(income, 'TK/0', bpjsAllOn, false);
+
+		expect(result.bpjs.jpEmployee).toBeCloseTo(80_000, 0);
+		expect(result.bpjs.jpCompany).toBeCloseTo(160_000, 0);
+	});
+
+	it('caps JP contribution exactly at the wage ceiling', () => {
+		const income = {
+			baseSalary: 11_086_300,
+			allowances: 0,
+			companyPaidInsurance: 0,
+			bonus: 0,
+			thr: 0
+		};
+
+		const result = calculateTax(income, 'TK/0', bpjsAllOn, false);
+
+		expect(result.bpjs.jpEmployee).toBeCloseTo(110_863, 0);
+		expect(result.bpjs.jpCompany).toBeCloseTo(221_726, 0);
+	});
+
+	it('locks in existing kesehatan and JHT behavior at 20M base salary', () => {
+		const income = {
+			baseSalary: 20_000_000,
+			allowances: 0,
+			companyPaidInsurance: 0,
+			bonus: 0,
+			thr: 0
+		};
+
+		const result = calculateTax(income, 'TK/0', bpjsAllOn, false);
+
+		expect(result.bpjs.kesehatanEmployee).toBeCloseTo(120_000, 0);
+		expect(result.bpjs.kesehatanCompany).toBeCloseTo(480_000, 0);
+		expect(result.bpjs.jhtEmployee).toBeCloseTo(400_000, 0);
+		expect(result.bpjs.jhtCompany).toBeCloseTo(740_000, 0);
+	});
+
+	it('produces zero BPJS contributions when all toggles are off', () => {
+		const income = {
+			baseSalary: 20_000_000,
+			allowances: 0,
+			companyPaidInsurance: 0,
+			bonus: 0,
+			thr: 0
+		};
+
+		const result = calculateTax(income, 'TK/0', bpjsAllOff, false);
+
+		expect(result.bpjs.jhtEmployee).toBe(0);
+		expect(result.bpjs.jhtCompany).toBe(0);
+		expect(result.bpjs.jpEmployee).toBe(0);
+		expect(result.bpjs.jpCompany).toBe(0);
+		expect(result.bpjs.kesehatanEmployee).toBe(0);
+		expect(result.bpjs.kesehatanCompany).toBe(0);
+	});
+});
