@@ -3,6 +3,7 @@
 	import {
 		calculateTax,
 		BPJS,
+		TER_CATEGORY_MAP,
 		formatRatePercent,
 		type PTKPStatus,
 		type BpjsToggles
@@ -56,6 +57,7 @@
 	});
 
 	let result = $derived(calculateTax(income, ptkpStatus, bpjsToggles, isGrossUp));
+	let ptkpTerCategory = $derived(TER_CATEGORY_MAP[ptkpStatus]);
 
 	// Hydrate from URL hash on mount
 	onMount(() => {
@@ -283,9 +285,14 @@
 								class="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 							>
 								{#each ptkpOptions as option (option)}
-									<option value={option}>{option}</option>
+									<option value={option}>{option} — TER {TER_CATEGORY_MAP[option]}</option>
 								{/each}
 							</select>
+							<p class="mt-2 text-xs leading-5 text-gray-500">
+								{t.ptkpHint}
+								{t.ptkpMonthlyCategory}:
+								<span class="font-semibold text-gray-700">TER {ptkpTerCategory}</span>.
+							</p>
 						</div>
 
 						<div>

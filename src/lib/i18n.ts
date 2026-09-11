@@ -13,6 +13,9 @@ export const translations = {
 		includeBonus: 'Include Bonus',
 		taxConfig: 'Tax Settings',
 		ptkpStatus: 'Tax Relief Status (PTKP)',
+		ptkpHint:
+			'Monthly PPh 21 uses the TER category. Changing PTKP within the same category affects the annual reconciliation, not regular monthly withholding.',
+		ptkpMonthlyCategory: 'Monthly category',
 		bpjsPart: 'BPJS Contributions',
 		jht: 'Old Age Security (JHT)',
 		jp: 'Pension Security (JP)',
@@ -61,6 +64,9 @@ export const translations = {
 		includeBonus: 'Sertakan Bonus',
 		taxConfig: 'Pengaturan Pajak',
 		ptkpStatus: 'Status PTKP',
+		ptkpHint:
+			'PPh 21 bulanan menggunakan kategori TER. Perubahan PTKP dalam kategori yang sama memengaruhi rekonsiliasi tahunan, bukan potongan bulanan rutin.',
+		ptkpMonthlyCategory: 'Kategori bulanan',
 		bpjsPart: 'Kontribusi BPJS',
 		jht: 'Jaminan Hari Tua (JHT)',
 		jp: 'Jaminan Pensiun (JP)',
